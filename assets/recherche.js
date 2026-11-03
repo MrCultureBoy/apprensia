@@ -20,7 +20,7 @@
     ["Sources", "ressources/sources/", "Chaque étude, commentée"],
     ["Qui sommes-nous", "qui-sommes-nous/", "L'histoire d'Apprensia et de son fondateur"],
     ["Les ateliers", "ateliers/", "Pour une équipe enseignante ou une classe de lycée"],
-    ["Tarifs et conditions", "tarifs/", "Ateliers offerts pendant la phase pilote, ensuite sur devis"],
+    ["Tarifs et conditions", "tarifs/", "Ateliers offerts aux 10 premiers établissements, ensuite sur devis"],
     ["Supports d'atelier", "ateliers/supports/", "Invitations, affiches et carnets à imprimer"],
     ["L'app Apprensia", "app/", "iPhone et Mac, sans compte"],
     ["Nous écrire", "index.html#contact", "Un atelier, une question"],
