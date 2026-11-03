@@ -22,7 +22,8 @@
       .replace(/« /g, "« ").replace(/ »/g, " »")
       .replace(/ ([:;?!])/g, "\u00a0$1")
       .replace(/(^|[^\d,])(\d{1,3}) (\d{3})(?!\d)/g, "$1$2\u00a0$3")   // « 2 250 » insécable
-      .replace(/(\d) %/g, "$1\u00a0%");
+      .replace(/(\d) %/g, "$1\u00a0%")
+      .replace(/(^|[^\d,])(\d+) (?=[a-zàâçéèêëîïôûùüÿœ])/g, "$1$2\u00a0");   // « 13 ans »
   };
   A.racine = (function () {                        // chemin relatif vers la racine du site
     var s = document.querySelector('script[src$="assets/site.js"]');

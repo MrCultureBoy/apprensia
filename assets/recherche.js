@@ -18,6 +18,7 @@
     ["Guides pratiques", "ressources/guides/", "Des routines à cocher"],
     ["Glossaire", "ressources/glossaire/", "Les mots de l'attention"],
     ["Sources", "ressources/sources/", "Chaque étude, commentée"],
+    ["Qui sommes-nous", "qui-sommes-nous/", "L'histoire d'Apprensia et de son fondateur"],
     ["Les ateliers", "ateliers/", "Pour une équipe enseignante ou une classe de lycée"],
     ["Supports d'atelier", "ateliers/supports/", "Invitations, affiches et carnets à imprimer"],
     ["L'app Apprensia", "app/", "iPhone et Mac, sans compte"],
