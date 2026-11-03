@@ -58,13 +58,19 @@
     C.chapitres.forEach(function (c) {
       var ici = vues.filter(function (n) { return n.chapitre === c.id; });
       if (!ici.length) return;
+      var lues = C.notions.filter(function (n) { return n.chapitre === c.id && A.parcours && A.parcours.fait("n", n.id); }).length;
+      var toutes = C.notions.filter(function (n) { return n.chapitre === c.id; }).length;
       html += '<section class="groupe" id="chapitre-' + c.id + '"><h2><small>Chapitre ' + chapitreDe[c.id].rang + "</small>" + A.fr(c.titre) +
+        (lues ? '<span class="lues' + (lues === toutes ? " toutes" : "") + '">' + lues + " / " + toutes + " lues</span>" : "") +
         "</h2><p>" + A.fr(c.sousTitre) + '</p><div class="cartes-notions">';
       ici.forEach(function (n) {
-        html += '<button type="button" class="notion-carte" data-notion="' + n.id + '">' +
+        // Un vrai lien vers la page de la notion (moteurs de recherche, clic du milieu) ;
+        // un clic simple ouvre la fiche dans la fenêtre, sans quitter la liste.
+        var lue = A.parcours && A.parcours.fait("n", n.id);
+        html += '<a class="notion-carte' + (lue ? " lue" : "") + '" href="' + A.racine + "notions/" + n.id + '/" data-notion="' + n.id + '">' +
           '<span class="rang">' + chapitreDe[n.chapitre].rang + "." + n.rang + "</span>" +
           '<span class="nt">' + surligner(A.fr(n.titre), mots) + '</span><span class="np">' + surligner(A.fr(n.phrase), mots) + "</span>" +
-          (n.experience && experienceDe[n.experience] ? '<span class="vivre">Avec une expérience à vivre</span>' : "") + "</button>";
+          (n.experience && experienceDe[n.experience] ? '<span class="vivre">Avec une expérience à vivre</span>' : "") + "</a>";
       });
       html += "</div></section>";
     });
@@ -86,6 +92,15 @@
     var liees = (n.liees || []).filter(function (x) { return parId[x]; }).map(function (x) {
       return '<button type="button" class="puce" data-notion="' + x + '">' + A.fr(parId[x].titre) + "</button>";
     }).join("");
+    // Les renvois vers les Ressources : les mots du glossaire et les guides qui citent cette notion.
+    var mots = (C.glossaire || []).filter(function (m) { return (m.notions || []).indexOf(n.id) >= 0; }).map(function (m) {
+      return '<a class="puce" href="' + A.racine + "ressources/glossaire/#mot-" + m.id + '">' + A.fr(m.mot) + "</a>";
+    }).join("");
+    var pratique = (C.guides || []).filter(function (g) {
+      return g.etapes.some(function (e) { return (e.notions || []).indexOf(n.id) >= 0; });
+    }).map(function (g) {
+      return '<a class="puce" href="' + A.racine + "ressources/guides/#" + g.id + '">' + A.fr(g.titre) + "</a>";
+    }).join("");
     corps.innerHTML =
       '<p class="kicker">Chapitre ' + c.rang + " · " + A.fr(c.titre) + "</p>" +
       '<h2 id="fiche-titre" tabindex="-1">' + A.fr(n.titre) + "</h2>" +
@@ -94,11 +109,16 @@
       bloc("Les nuances", n.nuances) +
       bloc("Au quotidien", n.auQuotidien) +
       bloc("Sources", n.sources, "sources") +
+      '<span class="lu-repere" data-lu-repere="' + n.id + '" aria-hidden="true"></span>' +
       (liees ? '<h3>Pour aller plus loin</h3><div class="liees">' + liees + "</div>" : "") +
+      (pratique ? '<h3>Mise en pratique</h3><div class="liees">' + pratique + "</div>" : "") +
+      (mots ? '<h3>Dans le glossaire</h3><div class="liees">' + mots + "</div>" : "") +
       '<div class="actions">' +
       (e ? '<a class="btn or" href="' + A.racine + "experiences/#" + e.id + '">Vivre l\'expérience : ' + A.fr(e.titre) + "</a>" : "") +
+      '<a class="btn contour" href="' + A.racine + "ressources/fiches/#fiche-" + n.chapitre + '">La fiche du chapitre</a>' +
       '<a class="btn contour" href="' + A.racine + 'quiz/">Se tester : Vrai ou faux</a></div>';
     corps.scrollTop = 0;
+    if (A.parcours) A.parcours.guetter(corps.querySelector("[data-lu-repere]"));   // lue une fois les sources atteintes
     if (!depuisAdresse) history.replaceState(null, "", "#" + n.id);
     document.title = n.titre + " · Apprensia";
     if (!fiche.open) { retour = document.activeElement; fiche.showModal(); }
@@ -134,11 +154,15 @@
 
   document.addEventListener("click", function (e) {
     var b = e.target.closest("[data-notion]");
-    if (b) { ouvrir(b.getAttribute("data-notion")); return; }
+    if (b) {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;   // nouvel onglet : la page
+      e.preventDefault(); ouvrir(b.getAttribute("data-notion")); return;
+    }
     var p = e.target.closest("[data-chap]");
     if (p) { chapitre = p.getAttribute("data-chap") || null; puces(); afficher(); }
   });
   champ.addEventListener("input", afficher);
+  document.addEventListener("apprensia:parcours", afficher);
 
   // L'adresse décide : #effet-test ouvre la fiche, #chapitre-ecrans filtre.
   function depuisAdresse() {

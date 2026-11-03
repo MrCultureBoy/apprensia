@@ -1,0 +1,183 @@
+/* Apprensia : le mouvement. Tout part de l'image du site, le projecteur de
+   l'attention : la lumière se pose, suit le pointeur, allume un mot, révèle ce
+   qu'on regarde. Rien ne bouge pour qui a demandé moins d'animations
+   (prefers-reduced-motion), et les effets au pointeur attendent une souris. */
+
+/* ── En-tête qui se resserre au défilement ── */
+.entete { transition: box-shadow .4s var(--doucement), background-color .4s; }
+.entete .conteneur { transition: min-height .4s var(--doucement); }
+.entete.defile { box-shadow: 0 10px 30px rgb(11 20 40 / .08); background: color-mix(in srgb, var(--fond) 92%, transparent); }
+.entete.defile .conteneur { min-height: 56px; }
+
+/* ── Le mot qui s'allume (« éclairés ») : l'or reste, même sans animation ── */
+.heros .mot.eclaire > span { color: var(--or); text-shadow: 0 0 28px rgb(227 167 47 / .35); }
+
+/* ── Le ruban des notions (accueil) ── */
+.ruban { position: relative; overflow: hidden; border-block: 1px solid var(--filet); background: var(--fond); padding: 18px 0;
+         -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.ruban-piste { display: flex; width: max-content; gap: 0; }
+.ruban a { display: inline-flex; align-items: center; gap: 22px; padding-right: 22px; white-space: nowrap; text-decoration: none;
+           font: italic 500 1.15rem/1.2 var(--titre); color: var(--doux); transition: color .25s; }
+.ruban a::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--or); opacity: .8; }
+.ruban a:hover { color: var(--texte); }
+
+/* ── Cartes-projecteur : une lueur suit le pointeur dans la carte ── */
+:is(a.carte, .chapitre, .notion-carte, .exp-carte, .source-ref) { position: relative; isolation: isolate; }
+:is(a.carte, .notion-carte, .exp-carte, .source-ref) { overflow: hidden; }
+:is(a.carte, .chapitre, .notion-carte, .exp-carte, .source-ref)::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit; opacity: 0; transition: opacity .45s;
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgb(227 167 47 / .16), transparent 45%); }
+@media (hover: hover) { :is(a.carte, .chapitre, .notion-carte, .exp-carte, .source-ref):hover::after { opacity: 1; } }
+
+/* ── Boutons : attirés par le pointeur, et un reflet qui passe ── */
+.btn { position: relative; overflow: hidden; isolation: isolate; transform: translate(var(--tx, 0px), var(--ty, 0px)); }
+.btn:hover { transform: translate(var(--tx, 0px), calc(var(--ty, 0px) - 2px)); }
+.btn.or::before, .btn.encre::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; transform: translateX(-120%);
+  background: linear-gradient(105deg, transparent 30%, rgb(255 255 255 / .45) 50%, transparent 70%); }
+
+@media (prefers-reduced-motion: no-preference) {
+
+  /* ── Passage d'une page à l'autre : un fondu, l'en-tête ne bouge pas ── */
+  @view-transition { navigation: auto; }
+  .entete { view-transition-name: entete; }
+  ::view-transition-old(root) { animation: vt-sort .22s cubic-bezier(.4, 0, 1, 1) both; }
+  ::view-transition-new(root) { animation: vt-entre .5s var(--doucement) both; }
+  @keyframes vt-sort { to { opacity: 0; transform: translateY(-10px); } }
+  @keyframes vt-entre { from { opacity: 0; transform: translateY(14px); } }
+
+  /* ── Titres : chaque mot monte derrière son cache, net après un léger flou ── */
+  .js .titre-mots .mot { overflow: clip; overflow-clip-margin: .2em; vertical-align: top; padding-bottom: .06em; margin-bottom: -.06em; }
+  .js .titre-mots .mot > span { display: inline-block; animation: mot-monte 1s var(--doucement) both; animation-delay: calc(var(--m) * 65ms + 180ms); }
+  @keyframes mot-monte { from { transform: translateY(105%) rotate(3deg); filter: blur(6px); opacity: 0; } }
+  /* Le faisceau passe sur le mot, puis l'or reste. */
+  .js .heros .mot.eclaire > span {
+    background: linear-gradient(90deg, var(--or) 0 45%, #FFE7A8 50%, var(--ivoire) 55% 100%) 100% 0 / 220% 100% no-repeat;
+    -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none;
+    animation: mot-monte 1s var(--doucement) both, allume-mot 1.4s cubic-bezier(.6, 0, .2, 1) 1.3s both;
+    animation-delay: calc(var(--m) * 65ms + 180ms), 1.3s; }
+  @keyframes allume-mot { to { background-position: 0 0; } }
+
+  /* ── Apparitions au défilement : en cascade, du flou au net ── */
+  @supports (animation-timeline: view()) {
+    .apparait { animation: apparition linear both; animation-timeline: view();
+                animation-range: entry calc(var(--r, 0) * 5%) cover calc(26% + var(--r, 0) * 5%); }
+  }
+  @keyframes apparition { from { opacity: 0; transform: translateY(32px) scale(.985); filter: blur(5px); } }
+  @supports not (animation-timeline: view()) { .js .apparait { transition-delay: calc(var(--r, 0) * 90ms); } }
+
+  /* Le filet doré des chiffres se trace quand on arrive dessus. */
+  @supports (animation-timeline: view()) {
+    .chiffre { border-top-color: transparent; position: relative; }
+    .chiffre::before { content: ""; position: absolute; top: -2px; left: 0; right: 0; height: 2px; background: var(--or); transform-origin: 0 50%;
+                       animation: trace linear both; animation-timeline: view(); animation-range: entry 20% cover 40%; }
+    @keyframes trace { from { transform: scaleX(0); } }
+  }
+
+  /* Les pastilles de la démarche s'allument une à une. */
+  .etapes .pastille { transition: transform .6s var(--doucement), box-shadow .6s; }
+  .etapes li:hover .pastille { transform: scale(1.08); box-shadow: 0 0 0 8px rgb(227 167 47 / .1); }
+
+  /* ── Ruban : il défile seul, et s'arrête sous le pointeur ── */
+  .ruban-piste { animation: ruban 90s linear infinite; }
+  .ruban:hover .ruban-piste { animation-play-state: paused; }
+  @keyframes ruban { to { transform: translateX(-50%); } }
+
+  /* ── Reflet des boutons au survol ── */
+  @media (hover: hover) {
+    .btn.or:hover::before, .btn.encre:hover::before { transition: transform .8s var(--doucement); transform: translateX(120%); }
+    .btn { transition: transform .35s var(--doucement), box-shadow .35s; }
+    .btn.or:hover { box-shadow: 0 14px 40px rgb(227 167 47 / .4); }
+  }
+
+  /* ── Le téléphone de l'accueil flotte doucement ── */
+  .duo .telephone { animation: flotte 7s ease-in-out infinite; }
+  @keyframes flotte { 50% { translate: 0 -12px; } }
+}
+
+/* La poussière dans le faisceau (dessinée par mouvement.js). */
+.faisceau canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+@media print { .ruban { display: none; } }
+
+/* ── Votre parcours : l'anneau de l'en-tête ── */
+.parcours-bouton { --p: 0; position: relative; width: 40px; height: 40px; flex: none; border-radius: 50%; border: 0; padding: 0; cursor: pointer;
+  display: grid; place-items: center; color: var(--accent-texte);
+  background: conic-gradient(var(--or) calc(var(--p) * 1turn), color-mix(in srgb, var(--texte) 12%, transparent) 0); }
+.parcours-bouton::before { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--fond); }
+.parcours-bouton svg { position: relative; }
+.parcours-bouton:hover { box-shadow: 0 0 0 4px rgb(227 167 47 / .18); }
+.parcours-bouton.gagne { animation: gagne .9s var(--doucement); }
+@keyframes gagne { 30% { transform: scale(1.18); box-shadow: 0 0 0 8px rgb(227 167 47 / .25), 0 0 30px rgb(227 167 47 / .5); } }
+
+/* La fenêtre */
+dialog.parcours-fenetre { width: min(720px, 100% - 24px); }
+.parcours-corps { overflow-y: auto; padding: clamp(22px, 4vw, 40px); overscroll-behavior: contain; }
+.parcours-tete { display: grid; grid-template-columns: auto 1fr; gap: 24px 32px; align-items: center; margin-bottom: 28px; }
+@media (max-width: 560px) { .parcours-tete { grid-template-columns: 1fr; justify-items: center; text-align: center; } }
+.parcours-tete h2 { margin: 0 0 .3em; font-size: clamp(1.8rem, 4vw, 2.4rem); }
+.parcours-tete .kicker { margin-bottom: 6px; }
+.parcours-tete p.doux { margin: 0 0 12px; }
+.grand-anneau { --p: 0; width: 168px; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center;
+  background: conic-gradient(var(--or) calc(var(--p) * 1turn), var(--filet) 0); box-shadow: 0 0 60px rgb(227 167 47 / calc(var(--p) * .45)); }
+.grand-anneau > div { width: 84%; aspect-ratio: 1; border-radius: 50%; background: var(--fond); display: grid; place-content: center; text-align: center; }
+.grand-anneau b { font: 600 2.6rem/1 var(--titre); color: var(--accent-texte); font-variant-numeric: lining-nums; }
+.grand-anneau span { font-size: .85rem; color: var(--doux); }
+.serie { display: inline-flex; align-items: center; gap: 8px; margin: 0; padding: 8px 14px; border-radius: 999px; background: rgb(227 167 47 / .14); color: var(--accent-texte); }
+.serie span { color: var(--texte); } .serie b { color: var(--accent-texte); }
+.parcours-barres { display: grid; gap: 4px; margin-bottom: 26px; }
+.parcours-ligne { display: grid; grid-template-columns: 170px 1fr 64px; gap: 14px; align-items: center; padding: 10px 12px; margin: 0 -12px; border-radius: 12px; text-decoration: none; color: inherit; }
+.parcours-ligne:hover { background: color-mix(in srgb, var(--texte) 5%, transparent); }
+.parcours-ligne b { text-align: right; font-variant-numeric: tabular-nums lining-nums; }
+.parcours-barre { height: 8px; border-radius: 8px; background: var(--filet); overflow: hidden; }
+.parcours-barre i { display: block; height: 100%; width: calc(var(--v) * 100%); border-radius: inherit; background: linear-gradient(90deg, #C98A1B, var(--or), #FFD98A); }
+@media (max-width: 560px) { .parcours-ligne { grid-template-columns: 1fr 52px; } .parcours-barre { grid-column: 1 / -1; grid-row: 2; } }
+.badges-titre { font: 700 .8rem/1 var(--corps); letter-spacing: .14em; text-transform: uppercase; color: var(--accent-texte); margin: 0 0 14px; }
+.badges-titre small { font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--doux); margin-left: 6px; font-size: .9rem; }
+.badges { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.badge-carte { display: grid; justify-items: center; text-align: center; gap: 6px; padding: 18px 12px; border-radius: 18px; border: 1px dashed var(--filet); }
+.badge-carte b { font: 600 1rem/1.2 var(--titre); }
+.badge-carte > span:not(.medaille-rond) { font-size: .82rem; color: var(--doux); line-height: 1.35; }
+.badge-carte:not(.obtenu) b { color: var(--doux); }
+.badge-carte:not(.obtenu) .medaille-rond { background: var(--filet); color: var(--doux); box-shadow: none; opacity: .7; }
+.badge-carte.obtenu { border-style: solid; border-color: color-mix(in srgb, var(--or) 50%, var(--filet)); background: linear-gradient(170deg, rgb(227 167 47 / .1), transparent 60%); }
+
+/* La médaille */
+.medaille-rond { position: relative; width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; flex: none; color: var(--encre);
+  background: radial-gradient(circle at 32% 28%, #FFE9B0, var(--or) 52%, #B47A14); box-shadow: 0 6px 18px rgb(227 167 47 / .45), inset 0 0 0 2px rgb(255 255 255 / .35); }
+.badge-carte.obtenu .medaille-rond::after { content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: linear-gradient(115deg, transparent 35%, rgb(255 255 255 / .55) 50%, transparent 65%) -60px 0 / 200% 100% no-repeat; }
+
+/* Les annonces (en bas de l'écran) */
+.annonces { position: fixed; z-index: 60; left: 50%; bottom: 22px; transform: translateX(-50%); display: grid; gap: 10px; justify-items: center; width: min(440px, 100% - 24px); pointer-events: none; }
+.annonce { pointer-events: auto; background: var(--encre); color: var(--ivoire); border: 1px solid rgb(248 245 239 / .14); border-radius: 999px; padding: 11px 18px;
+  font-size: .95rem; box-shadow: 0 18px 40px rgb(11 20 40 / .35); transition: opacity .5s, transform .5s var(--doucement); }
+.annonce b { color: var(--or); }
+.annonce.medaille { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; border-radius: 22px; padding: 14px 18px 14px 14px; width: 100%; }
+.annonce.medaille small { display: block; font: 700 .7rem/1 var(--corps); letter-spacing: .14em; text-transform: uppercase; color: var(--or); margin-bottom: 4px; }
+.annonce.medaille b { display: block; color: var(--ivoire); font: 600 1.15rem/1.2 var(--titre); }
+.annonce.medaille span span { display: block; font-size: .86rem; color: var(--brume); }
+.annonce.part { opacity: 0; transform: translateY(10px); }
+.eclat { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px; border-radius: 50%; background: #FFD98A; pointer-events: none; opacity: 0; }
+
+/* Ce qui est déjà fait, dans les listes */
+.notion-carte.lue .rang::after, .exp-carte.vecue .exp-titre::after { content: "✓ Lue"; margin-left: 10px; padding: 3px 8px; border-radius: 999px; font: 700 .7rem/1 var(--corps);
+  letter-spacing: .04em; background: rgb(227 167 47 / .18); color: var(--accent-texte); vertical-align: middle; }
+.exp-carte.vecue .exp-titre::after { content: "✓ Vécue"; }
+.groupe h2 .lues { margin-left: auto; font: 700 .8rem/1 var(--corps); padding: 6px 10px; border-radius: 999px; background: rgb(227 167 47 / .14); color: var(--accent-texte); }
+.groupe h2 .lues.toutes { background: var(--or); color: var(--encre); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .annonce { animation: annonce-entre .6s var(--doucement) both; }
+  @keyframes annonce-entre { from { opacity: 0; transform: translateY(24px) scale(.96); } }
+  .annonce.medaille .medaille-rond { animation: medaille 1s var(--doucement) both; }
+  @keyframes medaille { from { transform: scale(.2) rotate(-90deg); } 60% { transform: scale(1.15); } }
+  .eclat { animation: eclat var(--t) cubic-bezier(.2, .7, .3, 1) .2s both; }
+  @keyframes eclat { 0% { opacity: 1; transform: rotate(var(--a)) translateX(0) scale(1); } 100% { opacity: 0; transform: rotate(var(--a)) translateX(var(--d)) scale(.3); } }
+  .badge-carte.obtenu .medaille-rond::after { animation: reflet 3.5s ease-in-out infinite; }
+  @keyframes reflet { 0%, 60% { background-position: -60px 0; } 100% { background-position: 60px 0; } }
+  .parcours-barre i { animation: remplit 1.1s var(--doucement) .15s both; transform-origin: 0 50%; }
+  @keyframes remplit { from { transform: scaleX(0); } }
+  .grand-anneau { animation: anneau-entre .9s var(--doucement) both; }
+  @keyframes anneau-entre { from { transform: scale(.85) rotate(-40deg); opacity: 0; } }
+}
+@media print { .annonces, .parcours-bouton { display: none !important; } }

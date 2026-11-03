@@ -46,7 +46,7 @@
     });
     var n = notionDe[q.notion], derniere = i === questions.length - 1;
     zone.querySelector("[data-suite]").innerHTML = '<div class="explication"><p><b>' + (juste ? "Juste." : "Pas tout à fait.") + "</b> " + A.fr(q.explication) + "</p>" +
-      (n ? '<a href="' + A.racine + "notions/#" + n.id + '">Lire la notion : ' + A.fr(n.titre) + "</a>" : "") + "</div>" +
+      (n ? '<a href="' + A.racine + "notions/" + n.id + '/">Lire la notion : ' + A.fr(n.titre) + "</a>" : "") + "</div>" +
       '<button type="button" class="btn encre" data-suivante>' + (derniere ? "Voir mon score" : "Question suivante") + "</button>";
     var suivante = zone.querySelector("[data-suivante]");
     suivante.focus({ preventScroll: true });
@@ -56,6 +56,7 @@
   function fin() {
     var meilleur = A.lire("quiz.meilleur");
     if (meilleur == null || score > meilleur) A.stocker("quiz.meilleur", score);
+    if (A.parcours) A.parcours.marquer("q", null, score);
     var total = questions.length, part = score / total;
     var mot = part === 1 ? "Aucune idée reçue ne vous a eu." : part >= 0.7 ? "Très solide : quelques pièges ont fonctionné." :
       part >= 0.4 ? "Ces idées reçues sont tenaces : elles circulent partout, même chez les enseignants." : "Bonne nouvelle : vous venez d'en corriger beaucoup.";

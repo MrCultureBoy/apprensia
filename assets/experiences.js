@@ -6,8 +6,9 @@
    temps restent dans la page. */
 (function () {
   "use strict";
-  var A = window.Apprensia, C = window.APPRENSIA;
-  if (!A || !C) return;
+  // Sur l'accueil, le contenu n'est pas chargé : le Stroop éclair n'en a pas besoin.
+  var A = window.Apprensia, C = window.APPRENSIA || { notions: [], experiences: [] };
+  if (!A) return;
 
   var COULEURS = [
     { id: "rouge", mot: "ROUGE", nom: "Rouge", c: "#C8423B" },
@@ -22,7 +23,7 @@
   function lienNotion(id, texte) {
     var n = notionDe[id];
     if (!n) return "";
-    return '<a class="btn contour" href="' + A.racine + "notions/#" + id + '">' + (texte || "Comprendre : " + A.fr(n.titre)) + "</a>";
+    return '<a class="btn contour" href="' + A.racine + "notions/" + id + '/">' + (texte || "Comprendre : " + A.fr(n.titre)) + "</a>";
   }
   function ms(x) { return Math.round(x) + " ms"; }
   function secondes(x) { return (x / 1000).toFixed(1).replace(".", ",") + " s"; }
@@ -472,11 +473,15 @@
   var liste = document.querySelector("[data-experiences]"), scene = document.querySelector("[data-scene]");
   if (liste) {
     liste.innerHTML = C.experiences.map(function (e, k) {
-      return '<button type="button" class="exp-carte apparait" data-exp="' + e.id + '"><span class="exp-num">' + (k + 1) + "</span>" +
+      var vecue = A.parcours && A.parcours.fait("e", e.id);
+      return '<button type="button" class="exp-carte apparait' + (vecue ? " vecue" : "") + '" data-exp="' + e.id + '"><span class="exp-num">' + (k + 1) + "</span>" +
         '<span><span class="exp-titre">' + A.fr(e.titre) + '</span><span class="exp-promesse">' + A.fr(e.promesse) + "</span></span>" + '<span class="duree">' + duree(e.dureeSecondes) + "</span></button>";
     }).join("");
   }
-  var vie = null, retour = null;
+  var vie = null, retour = null, suivi = null;
+  document.addEventListener("apprensia:parcours", function () {
+    document.querySelectorAll("[data-exp]").forEach(function (c) { c.classList.toggle("vecue", !!(A.parcours && A.parcours.fait("e", c.getAttribute("data-exp")))); });
+  });
   function lancer(id, depuisAdresse) {
     var e = experienceDe[id];
     if (!e || !scene || !MOTEURS[id]) return;
@@ -487,6 +492,12 @@
     if (!depuisAdresse) history.replaceState(null, "", "#" + id);
     document.title = e.titre + " · Apprensia";
     if (!scene.open) { retour = document.activeElement; scene.showModal(); }
+    // Une expérience compte comme vécue quand son écran de fin s'affiche (bouton « Rejouer »).
+    if (suivi) suivi.disconnect();
+    if (A.parcours && "MutationObserver" in window) {
+      suivi = new MutationObserver(function () { if (zone.querySelector("[data-rejouer]")) A.parcours.marquer("e", id); });
+      suivi.observe(zone, { childList: true, subtree: true });
+    }
     MOTEURS[id](zone, vie);
     var b = zone.querySelector("[data-go]");
     if (b) b.focus();

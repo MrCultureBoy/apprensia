@@ -20,7 +20,9 @@
     return A.esc(s)
       .replace(/\*([^*]+)\*/g, "<i>$1</i>")
       .replace(/« /g, "« ").replace(/ »/g, " »")
-      .replace(/ ([:;?!])/g, " $1");
+      .replace(/ ([:;?!])/g, "\u00a0$1")
+      .replace(/(^|[^\d,])(\d{1,3}) (\d{3})(?!\d)/g, "$1$2\u00a0$3")   // « 2 250 » insécable
+      .replace(/(\d) %/g, "$1\u00a0%");
   };
   A.racine = (function () {                        // chemin relatif vers la racine du site
     var s = document.querySelector('script[src$="assets/site.js"]');
@@ -83,13 +85,18 @@
     });
   }
 
+  // Les titres des héros montent mot à mot, chacun derrière son propre cache.
+  // Un mot nommé par data-eclaire (« éclairés ») s'allume ensuite en or.
+  // Sans animation (moins de mouvement demandé), le découpage reste : le mot reste en or.
   function titreMots() {
-    if (calme) return;
-    document.querySelectorAll(".titre-mots").forEach(function (h) {
-      var mots = h.textContent.trim().split(/\s+/);
-      h.setAttribute("aria-label", h.textContent.trim());
-      h.innerHTML = mots.map(function (m, i) {
-        return '<span class="mot" aria-hidden="true" style="--m:' + i + '">' + A.esc(m) + "</span>";
+    document.querySelectorAll(".titre-mots, .heros h1.monte").forEach(function (h) {
+      var texte = h.textContent.trim(), eclaire = h.getAttribute("data-eclaire");
+      h.classList.remove("monte"); h.classList.add("titre-mots");
+      h.setAttribute("aria-label", texte);
+      // Coupe aux seules espaces ordinaires : « faux : » reste soudé par son insécable.
+      h.innerHTML = texte.split(/[ \t\n]+/).map(function (m, i) {
+        var classe = eclaire && m.replace(/[.,;:!?]+$/, "") === eclaire ? "mot eclaire" : "mot";
+        return '<span class="' + classe + '" aria-hidden="true" style="--m:' + i + '"><span>' + A.esc(m) + "</span></span>";
       }).join(" ");
     });
   }
@@ -129,33 +136,20 @@
     });
   }
 
-  // Accueil : les cinq chapitres, tirés du contenu de l'app.
-  function chapitres() {
-    var zone = document.querySelector("[data-chapitres]"), C = window.APPRENSIA;
-    if (!zone || !C) return;
-    zone.innerHTML = C.chapitres.map(function (c, i) {
-      var nb = C.notions.filter(function (n) { return n.chapitre === c.id; }).length;
-      return '<a class="chapitre apparait" href="' + A.racine + "notions/#chapitre-" + c.id + '">' +
-        '<span class="num">' + (i + 1) + "</span><h3>" + A.fr(c.titre) + "</h3><p>" + A.fr(c.sousTitre) + "</p>" +
-        '<span class="nb">' + nb + " notions</span></a>";
-    }).join("");
-    zone.querySelectorAll(".apparait").forEach(A.guetter);
-  }
-
-  // Accueil : une notion par jour, la même pour tout le monde ce jour-là.
+  // Accueil : une notion par jour, la même pour tout le monde ce jour-là (repères du parcours).
   function notionDuJour() {
-    var zone = document.querySelector("[data-notion-du-jour]"), C = window.APPRENSIA;
-    if (!zone || !C || !C.notions.length) return;
+    var zone = document.querySelector("[data-notion-du-jour]"), R = window.APPRENSIA_REPERES;
+    if (!zone || !R || !R.notions.length) return;
     var d = new Date(), jour = Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5);
-    var n = C.notions[jour % C.notions.length];
-    zone.querySelector('[data-champ="titre"]').innerHTML = A.fr(n.titre);
-    zone.querySelector('[data-champ="phrase"]').innerHTML = A.fr(n.phrase);
-    zone.querySelector('[data-champ="lien"]').href = A.racine + "notions/#" + n.id;
+    var n = R.notions[jour % R.notions.length];
+    zone.querySelector('[data-champ="titre"]').innerHTML = A.fr(n[1]);
+    zone.querySelector('[data-champ="phrase"]').innerHTML = A.fr(n[3]);
+    zone.querySelector('[data-champ="lien"]').href = A.racine + "notions/" + n[0] + "/";
     zone.hidden = false;
   }
 
   document.addEventListener("DOMContentLoaded", function () {
-    menu(); barreLecture(); projecteurs(); titreMots(); inclinaison(); chapitres(); notionDuJour();
+    menu(); barreLecture(); projecteurs(); titreMots(); inclinaison(); notionDuJour();
     document.querySelectorAll(".apparait, [data-compte]").forEach(A.guetter);
   });
 })();
