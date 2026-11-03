@@ -478,3 +478,19 @@ a.notion-carte { text-decoration: none; }
     .frise::before { animation-name: trace-v; }
   }
 }
+
+/* ── Tarifs ── */
+.offres { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 24px; }
+.offre { position: relative; background: var(--carte); border: 1px solid var(--filet); border-radius: 28px; padding: clamp(24px, 4vw, 38px); display: grid; align-content: start; gap: 6px;
+         box-shadow: 0 1px 0 var(--filet), 0 24px 50px rgb(19 33 63 / .08); overflow: hidden; isolation: isolate; }
+.offre::before { content: ""; position: absolute; inset: 0 0 auto; height: 4px; background: linear-gradient(90deg, #C98A1B, var(--or), #FFD98A); }
+.offre h2 { font-size: clamp(1.6rem, 3vw, 2rem); margin: 0; }
+.offre h3 { font: 700 .78rem/1 var(--corps); letter-spacing: .14em; text-transform: uppercase; color: var(--accent-texte); margin: 22px 0 10px; }
+.offre .kicker { margin: 0; }
+.offre-prix { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 14px 0 6px; padding-bottom: 18px; border-bottom: 1px solid var(--filet); }
+.offre-prix b { font: 600 clamp(2.6rem, 5vw, 3.4rem)/1 var(--titre); color: var(--accent-texte); }
+.offre-prix span { color: var(--doux); font-weight: 700; font-size: .92rem; }
+.offre-faits { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; color: var(--doux); }
+.offre-faits b { color: var(--texte); }
+.offre .boutons { margin-top: 24px; }
+.faq h2 { margin-bottom: 24px; }

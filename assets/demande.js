@@ -9,6 +9,8 @@
   }
 
   document.querySelectorAll("[data-demande]").forEach(function (f) {
+    var voulu = { enseignants: 0, lyceens: 1, deux: 2, app: 3, autre: 4 }[new URLSearchParams(location.search).get("atelier")];
+    if (voulu != null && f.elements.atelier) f.elements.atelier.selectedIndex = voulu;
     var contact = f.getAttribute("data-contact"), retour = f.querySelector(".demande-retour");
     f.addEventListener("submit", function (e) {
       e.preventDefault();
