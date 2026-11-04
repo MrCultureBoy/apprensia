@@ -5,6 +5,7 @@
   "use strict";
   var A = window.Apprensia, C = window.APPRENSIA, zone = document.querySelector("[data-quiz]");
   if (!A || !C || !zone || !C.questions.length) return;
+  var Q = C.questions;
   var notionDe = {};
   C.notions.forEach(function (n) { notionDe[n.id] = n; });
   var LETTRES = "ABCD";
@@ -12,14 +13,14 @@
 
   function accueil() {
     var meilleur = A.lire("quiz.meilleur");
-    zone.innerHTML = '<div class="score"><p class="kicker">' + C.questions.length + " questions · 3 minutes</p>" +
+    zone.innerHTML = '<div class="score"><p class="kicker">' + Q.length + " questions · 3 minutes</p>" +
       '<h2>Qu\'en pensez-vous vraiment ?</h2><p class="lead">Répondez sans chercher : une erreur ici n\'est pas un échec, c\'est ce qui fait retenir l\'explication qui suit.</p>' +
-      (meilleur != null ? '<p class="doux">Votre meilleur score : ' + meilleur + " sur " + C.questions.length + "</p>" : "") +
+      (meilleur != null ? '<p class="doux">Votre meilleur score : ' + meilleur + " sur " + Q.length + "</p>" : "") +
       '<button type="button" class="btn or" data-go>Commencer</button></div>';
     zone.querySelector("[data-go]").addEventListener("click", commencer);
   }
   function commencer() {
-    questions = A.melanger(C.questions); i = 0; score = 0;
+    questions = A.melanger(Q); i = 0; score = 0;
     poser();
   }
   function poser() {
